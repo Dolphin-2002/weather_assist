@@ -1,0 +1,38 @@
+14/09/2026
+
+Ok understand this workspace fully and get any ideas for it then start building 
+Here's order first build Front end then backend for this project of mine 
+
+here's the plan 
+for ui elements use 
+npx shadcn@latest add swamimalode07/rare-ui/fluid-orb
+(rare ui) build resuable componets first then call all componets for ui
+
+for weather api use 
+use open-meteo
+[https://api.open-meteo.com/v1/forecast?latitude=](https://api.open-meteo.com/v1/forecast?latitude=){lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,uv_index&timezone=auto
+
+also for map use map libre (i would like a spining globe like world section in map section there will be a text box user will type thier country or state it will do a zoom animation then pin point that location)
+
+<link rel="stylesheet" href="[https://unpkg.com/maplibre-gl@^6.9.0/dist/maplibre-gl.css](https://unpkg.com/maplibre-gl@^6.9.0/dist/maplibre-gl.css)" />
+<div id="map" style="height: 400px"></div>
+<script type="module">
+    import * as maplibregl from '[https://unpkg.com/maplibre-gl@^6.9.0/dist/maplibre-gl.mjs](https://unpkg.com/maplibre-gl@^6.9.0/dist/maplibre-gl.mjs)';
+
+    const map = new maplibregl.Map({
+        container: 'map', // container id
+        style: '[https://demotiles.maplibre.org/globe.json](https://demotiles.maplibre.org/globe.json)', // style URL
+        center: [0, 0], // starting position [lng, lat]
+        zoom: 2 // starting zoom
+    });
+</script>
+
+ok for website logo 
+use 
+/src/assests/images/weather_assist_logo.jpg
+
+then in home page banners i want 4 banners 3 secounds delay then swith to another( 4 banner 
+2.jpg, 3.jpg , 4.jpg , 5.jpg all in assests/images folder)
+
+
+

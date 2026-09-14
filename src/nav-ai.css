@@ -1,0 +1,6 @@
+.ai-section { padding: 0 0 104px; background: var(--cream); }
+.ai-card { display: flex; align-items: center; justify-content: space-between; gap: 42px; padding-top: 74px; padding-bottom: 74px; border-top: 1px solid var(--line); }
+.ai-card h2 { margin: 0; letter-spacing: -2px; font-size: clamp(32px, 4.2vw, 54px); line-height: 1; }.ai-card h2 em { font-family: 'Playfair Display', serif; }
+.ai-card > div > p:not(.eyebrow) { max-width: 460px; margin: 22px 0 0; color: var(--muted); line-height: 1.6; }
+.ai-status { min-width: 245px; padding: 29px; border: 1px dashed rgba(21, 36, 45, .25); border-radius: 8px; background: #eef1e6; display: grid; gap: 10px; color: var(--ink); }.ai-status svg { color: #567f85; }.ai-status span { font-weight: 700; }.ai-status small { color: #668187; font: 11px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .8px; }
+@media (max-width: 700px) { .topbar { height: auto; min-height: 65px; flex-wrap: wrap; gap: 9px; padding-top: 12px; padding-bottom: 12px; }.topbar > .gooey-nav { order: 2; flex-basis: 100%; }.ai-section { padding-bottom: 67px; }.ai-card { align-items: start; flex-direction: column; padding-top: 58px; padding-bottom: 58px; gap: 30px; }.ai-status { width: 100%; } }

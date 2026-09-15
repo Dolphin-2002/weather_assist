@@ -391,6 +391,8 @@ footer {
   font-size: 12px;
 }
 footer p { margin:0 }
+.footer-portfolio { color:#456a70; font-weight:700; text-decoration:none; }
+.footer-portfolio:hover,.footer-portfolio:focus-visible { color:#2c5258; text-decoration:underline; text-underline-offset:3px; }
 
 /* ── Keyframes ────────────────────────────────────────────────────────────── */
 @keyframes drift {

@@ -313,7 +313,7 @@ function App() {
           <img src={logo} alt="" />
           <span>weather<span>assist</span></span>
         </div>
-        <p>Made for days worth looking up.</p>
+        <p>Made by <a className="footer-portfolio" href="https://dolphincv.netlify.app/" target="_blank" rel="noreferrer">🐬 k.Danussuthan</a></p>
         <span>© 2026 Weather Assist</span>
       </footer>
     </main>

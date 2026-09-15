@@ -11,6 +11,7 @@ import { fetchWeather } from './lib/weather.ts'
 import type { WeatherData } from './lib/weather.ts'
 import { FluidOrb } from './components/FluidOrb'
 import { GooeyNav } from './components/ui/gooey-nav'
+import ChatBox from './components/ChatBox.tsx'
 import logo from './assets/images/weather_assist_logo.jpg'
 import bannerOne from './assets/images/2.jpg'
 import bannerTwo from './assets/images/3.jpg'
@@ -65,6 +66,7 @@ function App() {
   const [isSearching, setIsSearching]     = useState(false)
   const [weather, setWeather]             = useState<WeatherData | null>(null)
   const [weatherLoading, setWeatherLoading] = useState(true)
+  const [showForecastDetails, setShowForecastDetails] = useState(false)
   const mapRef = useRef<GlobeMapHandle>(null)
 
   // ── Load weather for a given lat/lng ──────────────────────────────────────────
@@ -254,7 +256,9 @@ function App() {
             <p className="eyebrow dark">LOOKING AHEAD</p>
             <h2>Your five-day forecast</h2>
           </div>
-          <button className="text-button">View details <ArrowUpRight size={16} /></button>
+          <button className="text-button" type="button" onClick={() => setShowForecastDetails((shown) => !shown)} aria-expanded={showForecastDetails} aria-controls="forecast-details">
+            {showForecastDetails ? 'Hide details' : 'View details'} <ArrowUpRight size={16} />
+          </button>
         </div>
         <div className="forecast-list">
           {forecast.length > 0
@@ -278,6 +282,17 @@ function App() {
               </article>
             ))}
         </div>
+        {showForecastDetails && forecast.length > 0 && (
+          <div id="forecast-details" className="forecast-details">
+            {forecast.map((item) => (
+              <article key={`${item.label}-detail`}>
+                <strong>{item.label}</strong>
+                <span>{item.icon} {item.condition}</span>
+                <span>High {item.high}° · Low {item.low}°</span>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── AI teaser ── */}
@@ -285,14 +300,10 @@ function App() {
         <div className="section-shell ai-card">
           <div>
             <p className="eyebrow dark">WEATHER ASSIST AI</p>
-            <h2>Your weather co-pilot is<br /><em>on its way.</em></h2>
-            <p>Get planning help, personal weather insights, and useful alerts in one thoughtful conversation.</p>
+            <h2>Your weather co-pilot,<br /><em>ready to help.</em></h2>
+            <p>Get planning help, weather insights, and useful advice in one thoughtful conversation.</p>
           </div>
-          <div className="ai-status">
-            <Bot size={28} />
-            <span>AI is still in development</span>
-            <small>Coming soon</small>
-          </div>
+          <ChatBox />
         </div>
       </section>
 

@@ -1,147 +1,159 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import Globe from 'react-globe.gl';
-import type { GlobeMethods } from 'react-globe.gl';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import Globe from 'react-globe.gl'
+import type { GlobeMethods } from 'react-globe.gl'
 
-// ── Public handle ──────────────────────────────────────────────────────────────
 export interface GlobeMapHandle {
-  /** Fly the globe to coords AND drop/update the search pin */
-  showLocation(lat: number, lng: number, label: string, temp?: number): void;
+  flyTo(lat: number, lng: number): void
+  showLocation(lat: number, lng: number, label: string, temp?: number): void
 }
 
-// ── Marker types ───────────────────────────────────────────────────────────────
 interface GlobeMarker {
-  lat: number;
-  lng: number;
-  label: string;
-  temp?: number;
-  kind: 'user' | 'search';
+  lat: number
+  lng: number
+  city?: string
+  temp?: number
+  label?: string
+  kind: 'city' | 'user' | 'search'
 }
 
-// ── Reverse geocoding (Nominatim — free, no key) ───────────────────────────────
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {
-    const res = await fetch(
+    const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
       { headers: { 'Accept-Language': 'en' } },
-    );
-    const data = await res.json() as {
-      address?: { city?: string; town?: string; village?: string; county?: string; country?: string };
-    };
-    const a = data.address;
-    const city = a?.city ?? a?.town ?? a?.village ?? a?.county ?? 'Your Location';
-    return a?.country ? `${city}, ${a.country}` : city;
+    )
+    const data = await response.json() as {
+      address?: {
+        city?: string
+        town?: string
+        village?: string
+        county?: string
+        country?: string
+      }
+    }
+    const address = data.address
+    const city = address?.city ?? address?.town ?? address?.village ?? address?.county ?? 'Your Location'
+    return address?.country ? `${city}, ${address.country}` : city
   } catch {
-    return 'Your Location';
+    return 'Your Location'
   }
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
 interface GlobeMapProps {
-  onLocationName?: (name: string, lat: number, lng: number) => void;
+  onLocationName?: (name: string, lat: number, lng: number) => void
 }
 
 const GlobeMap = forwardRef<GlobeMapHandle, GlobeMapProps>(function GlobeMap(
   { onLocationName },
   ref,
 ) {
-  const globeEl      = useRef<GlobeMethods | undefined>(undefined);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize]       = useState(560);
-  const [markers, setMarkers] = useState<GlobeMarker[]>([]);
+  const globeRef = useRef<GlobeMethods | undefined>(undefined)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState(560)
+  const [markers, setMarkers] = useState<GlobeMarker[]>([])
 
-  // ── Expose showLocation ───────────────────────────────────────────────────────
   useImperativeHandle(ref, () => ({
-    showLocation(lat, lng, label, temp) {
-      const g = globeEl.current;
-      if (!g) return;
-
-      // Replace any existing search pin, keep user pin
-      setMarkers((prev) => [
-        ...prev.filter((m) => m.kind === 'user'),
-        { lat, lng, label, temp, kind: 'search' },
-      ]);
-
-      // Fly there
-      g.controls().autoRotate = false;
-      g.pointOfView({ lat, lng, altitude: 1.8 }, 1200);
-      setTimeout(() => {
-        globeEl.current?.controls() && (globeEl.current.controls().autoRotate = true);
-      }, 2400);
+    flyTo(lat, lng) {
+      const globe = globeRef.current
+      if (!globe) return
+      globe.controls().autoRotate = false
+      globe.pointOfView({ lat, lng, altitude: 1.8 }, 1200)
+      window.setTimeout(() => {
+        if (globeRef.current) globeRef.current.controls().autoRotate = true
+      }, 2200)
     },
-  }));
 
-  // ── Responsive canvas ─────────────────────────────────────────────────────────
+    showLocation(lat, lng, label, temp) {
+      setMarkers((previous) => [
+        ...previous.filter((marker) => marker.kind === 'user'),
+        { lat, lng, label, temp, kind: 'search' },
+      ])
+
+      const globe = globeRef.current
+      if (!globe) return
+      globe.controls().autoRotate = false
+      globe.pointOfView({ lat, lng, altitude: 1.8 }, 1200)
+      window.setTimeout(() => {
+        if (globeRef.current) globeRef.current.controls().autoRotate = true
+      }, 2200)
+    },
+  }), [])
+
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      const w = Math.round(entry.contentRect.width);
-      if (w > 0) setSize(w);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    const element = containerRef.current
+    if (!element) return
 
-  // ── Globe init + live geolocation ─────────────────────────────────────────────
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.round(entry.contentRect.width)
+      if (width > 0) setSize(width)
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
-    const g = globeEl.current;
-    if (!g) return;
+    const globe = globeRef.current
+    if (!globe || !navigator.geolocation) return
 
-    g.controls().autoRotate      = true;
-    g.controls().autoRotateSpeed = 0.6;
-
-    if (!navigator.geolocation) return;
+    globe.controls().autoRotate = true
+    globe.controls().autoRotateSpeed = 0.6
 
     navigator.geolocation.getCurrentPosition(
       async ({ coords: { latitude: lat, longitude: lng } }) => {
-        const cityName = await reverseGeocode(lat, lng);
-
-        // Add user pin only
-        setMarkers((prev) => [
-          ...prev.filter((m) => m.kind !== 'user'),
+        const cityName = await reverseGeocode(lat, lng)
+        globeRef.current?.pointOfView({ lat, lng, altitude: 1.8 }, 1500)
+        setMarkers((previous) => [
+          ...previous.filter((marker) => marker.kind !== 'user'),
           { lat, lng, label: cityName, kind: 'user' },
-        ]);
-
-        // Fly to user position
-        globeEl.current?.pointOfView({ lat, lng, altitude: 1.8 }, 1500);
-
-        onLocationName?.(cityName, lat, lng);
+        ])
+        onLocationName?.(cityName, lat, lng)
       },
-      () => { /* permission denied — globe keeps rotating */ },
+      () => {},
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    )
+  }, [onLocationName])
 
-  // ── HTML marker factory ───────────────────────────────────────────────────────
-  const makeElement = (d: object): HTMLElement => {
-    const m   = d as GlobeMarker;
-    const wrap = document.createElement('div');
+  const makeElement = (data: object): HTMLElement => {
+    const marker = data as GlobeMarker
+    const wrapper = document.createElement('div')
 
-    if (m.kind === 'user') {
-      wrap.innerHTML = `
+    if (marker.kind === 'user') {
+      wrapper.innerHTML = `
         <div class="globe-user-pin">
           <div class="globe-user-pulse"></div>
           <div class="globe-user-dot"></div>
-          <div class="globe-user-label">${m.label}</div>
-        </div>`;
-    } else {
-      // Search pin
-      const tempStr = m.temp !== undefined ? ` · ${m.temp}°C` : '';
-      wrap.innerHTML = `
-        <div class="globe-search-pin">
-          <div class="globe-search-dot"></div>
-          <div class="globe-search-label">${m.label}${tempStr}</div>
-        </div>`;
+          <div class="globe-user-label">${marker.label ?? 'Your Location'}</div>
+        </div>`
+      return wrapper
     }
 
-    return wrap;
-  };
+    if (marker.kind === 'search') {
+      const tempText = marker.temp === undefined ? '' : ` · ${marker.temp}°C`
+      wrapper.innerHTML = `
+        <div class="globe-search-pin">
+          <div class="globe-search-dot"></div>
+          <div class="globe-search-label">${marker.label ?? ''}${tempText}</div>
+        </div>`
+      return wrapper
+    }
+
+    wrapper.innerHTML = `<div class="globe-city-pin"><b>${marker.city ?? ''}</b>: ${marker.temp ?? 0}°C</div>`
+    wrapper.addEventListener('click', () => {
+      const globe = globeRef.current
+      if (!globe) return
+      globe.controls().autoRotate = false
+      globe.pointOfView({ lat: marker.lat, lng: marker.lng, altitude: 1.8 }, 800)
+      window.setTimeout(() => {
+        if (globeRef.current) globeRef.current.controls().autoRotate = true
+      }, 1500)
+    })
+    return wrapper
+  }
 
   return (
     <div ref={containerRef} className="globe-frame">
       <Globe
-        ref={globeEl}
+        ref={globeRef}
         width={size}
         height={size}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
@@ -151,7 +163,7 @@ const GlobeMap = forwardRef<GlobeMapHandle, GlobeMapProps>(function GlobeMap(
         htmlElement={makeElement}
       />
     </div>
-  );
-});
+  )
+})
 
-export default GlobeMap;
+export default GlobeMap
